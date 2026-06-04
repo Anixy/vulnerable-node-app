@@ -49,6 +49,24 @@ app.get('/ping', (req, res) => {
   });
 });
 
+// VULNERABILITY 5: SQL Injection in Login
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  // Vulnerable query: directly concatenating user input in a POST request
+  const query = `SELECT * FROM users WHERE username = '${username}' AND password = '${password}'`;
+  
+  connection.query(query, (error, results) => {
+    if (error) {
+      return res.status(500).send('Database error');
+    }
+    if (results.length > 0) {
+      res.send('Login successful');
+    } else {
+      res.status(401).send('Invalid credentials');
+    }
+  });
+});
+
 app.listen(port, () => {
   console.log(`App listening at http://localhost:${port}`);
 });
