@@ -49,6 +49,21 @@ app.get('/ping', (req, res) => {
   });
 });
 
+// VULNERABILITY 4: Path Traversal
+const fs = require('fs');
+const path = require('path');
+app.get('/download', (req, res) => {
+  const file = req.query.file;
+  // Vulnerable file path resolution: directly using user input without sanitization
+  const filePath = path.join(__dirname, 'public', file);
+  
+  if (fs.existsSync(filePath)) {
+    res.download(filePath);
+  } else {
+    res.status(404).send('File not found');
+  }
+});
+
 app.listen(port, () => {
   console.log(`App listening at http://localhost:${port}`);
 });
