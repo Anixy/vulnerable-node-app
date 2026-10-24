@@ -9,7 +9,13 @@ const { runValidatorsTests } = require('./unit/validators.test');
 const { runLdapAndEmailTests } = require('./unit/ldapAndEmail.test');
 const { runExportWorkerTests } = require('./unit/exportWorker.test');
 const { runControllersSuiteTests } = require('./unit/controllersSuite.test');
+const { runHrAndPayrollTests } = require('./unit/hrAndPayroll.test');
+const { runSamlAndSsoTests } = require('./unit/samlAndSso.test');
+const { runCacheAndRedisTests } = require('./unit/cacheAndRedis.test');
+const { runImageAndWebhookWorkersTests } = require('./unit/imageAndWebhookWorkers.test');
+const { runAnalyticsAndIotTests } = require('./unit/analyticsAndIot.test');
 const { runApiSecuritySuiteTests } = require('./integration/apiSecuritySuite.test');
+const { runEnterpriseModulesIntegrationTests } = require('./integration/enterpriseModulesIntegration.test');
 
 async function main() {
   console.log('==============================================================');
@@ -24,7 +30,13 @@ async function main() {
     { name: 'LDAP, Email & Logger Unit Tests', fn: runLdapAndEmailTests },
     { name: 'Export Worker Unit Tests', fn: runExportWorkerTests },
     { name: 'Controllers & Business Logic Unit Tests', fn: runControllersSuiteTests },
-    { name: 'API Security & Error Handler Integration Tests', fn: runApiSecuritySuiteTests }
+    { name: 'HR Payroll, Audit & Inventory TOCTOU Unit Tests', fn: runHrAndPayrollTests },
+    { name: 'SAML SSO, AI Agent, PDF & CI Pipeline Unit Tests', fn: runSamlAndSsoTests },
+    { name: 'Cache & Redis Protocol Injection Unit Tests', fn: runCacheAndRedisTests },
+    { name: 'ImageMagick, FFmpeg & Webhook Worker Unit Tests', fn: runImageAndWebhookWorkersTests },
+    { name: 'Analytics MapReduce, IoT Firmware & Chat Bot Unit Tests', fn: runAnalyticsAndIotTests },
+    { name: 'API Security & Error Handler Integration Tests', fn: runApiSecuritySuiteTests },
+    { name: 'Enterprise Router & Module Mounting Integration Tests', fn: runEnterpriseModulesIntegrationTests }
   ];
 
   let totalPassed = 0;

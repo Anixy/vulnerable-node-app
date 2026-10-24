@@ -6,7 +6,7 @@ const { authenticateUser, requireAdmin } = require('./src/middleware/authMiddlew
 const { verboseErrorHandler, insecureCorsMiddleware } = require('./src/middleware/errorHandler');
 const { unsafeDeepMerge, deserializeUserSession } = require('./src/utils/serializer');
 
-// Controllers & Services
+// Core Controllers
 const authController = require('./src/controllers/authController');
 const walletController = require('./src/controllers/walletController');
 const fileController = require('./src/controllers/fileController');
@@ -16,12 +16,25 @@ const paymentController = require('./src/controllers/paymentController');
 const reportController = require('./src/controllers/reportController');
 const oauthController = require('./src/controllers/oauthController');
 const documentController = require('./src/controllers/documentController');
+
+// Expanded Enterprise Subsystem Controllers
+const { router: analyticsRouter } = require('./src/controllers/analyticsController');
+const { router: iotDeviceRouter } = require('./src/controllers/iotDeviceController');
+const { router: hrPayrollRouter } = require('./src/controllers/hrPayrollController');
+const supportTicketController = require('./src/controllers/supportTicketController');
+const { router: ciPipelineRouter } = require('./src/controllers/ciPipelineController');
+const { router: chatWebsocketRouter } = require('./src/controllers/chatWebsocketController');
+
+// Services
 const systemService = require('./src/services/systemService');
 const webhookService = require('./src/services/webhookService');
 const xmlImportService = require('./src/services/xmlImportService');
 const { router: ldapRouter } = require('./src/services/ldapService');
 const { router: emailRouter } = require('./src/services/emailService');
 const graphqlService = require('./src/services/graphqlService');
+const { router: pdfInvoiceRouter } = require('./src/services/pdfInvoiceService');
+const { router: aiAssistantRouter } = require('./src/services/aiAssistantService');
+const { router: samlSsoRouter } = require('./src/services/samlSsoService');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -46,7 +59,7 @@ app.get('/', (req, res) => {
   res.send(`Welcome to ${runtimeConfig.appName}!`);
 });
 
-// Mount Enterprise Modules
+// Mount Core & Expanded Enterprise Modules
 app.use('/api/auth', authController);
 app.use('/api/wallet', walletController);
 app.use('/api/files', fileController);
@@ -56,12 +69,21 @@ app.use('/api/payments', paymentController);
 app.use('/api/reports', reportController);
 app.use('/api/oauth', oauthController);
 app.use('/api/documents', documentController);
+app.use('/api/analytics', analyticsRouter);
+app.use('/api/iot', iotDeviceRouter);
+app.use('/api/hr', hrPayrollRouter);
+app.use('/api/tickets', supportTicketController);
+app.use('/api/ci', ciPipelineRouter);
+app.use('/api/chat', chatWebsocketRouter);
 app.use('/api/system', systemService);
 app.use('/api/webhooks', webhookService);
 app.use('/api/xml', xmlImportService);
 app.use('/api/ldap', ldapRouter);
 app.use('/api/email', emailRouter);
 app.use('/api/graphql', graphqlService);
+app.use('/api/invoices', pdfInvoiceRouter);
+app.use('/api/ai', aiAssistantRouter);
+app.use('/api/saml', samlSsoRouter);
 
 // VULNERABILITY 2: Unauthenticated Admin Debug & Config Update Endpoint
 // Allows Prototype Pollution via unsafeDeepMerge and leaks all secrets
