@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    container_name: enterprise_vulnerable_node
+    # VULNERABILITY 1: Running container in privileged mode with host network and docker.sock mounted
+    privileged: true
+    network_mode: "host"
+    ports:
+      - "0.0.0.0:3000:3000"
+      - "0.0.0.0:9229:9229"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=127.0.0.1
+      - DB_USER=root
+      - DB_PASSWORD=Prod_MySQL_SuperSecret_2026!@#
+      - AWS_ACCESS_KEY_ID=AKIAIOSFODNN7PRODKEY
+      - AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYPRODKEY99
+      - STRIPE_SECRET_KEY=sk_live_51NzXKjL9vPqR2m8sT4uVwXyZ0123456789abcdef
+    volumes:
+      - /:/host_root:rw
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+
+  mysql:
+    image: mysql:5.7
+    container_name: enterprise_mysql_db
+    # VULNERABILITY 2: Exposing MySQL 3306 to 0.0.0.0 with empty/weak root password allowed
+    ports:
+      - "0.0.0.0:3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=Prod_MySQL_SuperSecret_2026!@#
+      - MYSQL_DATABASE=enterprise_prod_db
+    command: --secure-file-priv="" --local-infile=1
+
+  redis:
+    image: redis:5.0
+    container_name: enterprise_redis_cache
+    # VULNERABILITY 3: Exposing Redis 6379 to public internet with protected-mode disabled and no password
+    ports:
+      - "0.0.0.0:6379:6379"
+    command: redis-server --protected-mode no

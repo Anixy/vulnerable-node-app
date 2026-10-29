@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: enterprise-prod-secrets
+  namespace: default
+type: Opaque
+# VULNERABILITY 1: Hardcoded Production Secrets in Plaintext stringData committed to Git
+stringData:
+  DB_MASTER_PASSWORD: "Prod_MySQL_SuperSecret_2026!@#"
+  AWS_ACCESS_KEY_ID: "AKIAIOSFODNN7PRODKEY"
+  AWS_SECRET_ACCESS_KEY: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYPRODKEY99"
+  STRIPE_SECRET_KEY: "sk_live_51NzXKjL9vPqR2m8sT4uVwXyZ0123456789abcdef"
+  JWT_SIGNING_SECRET: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9-hardcoded-jwt-secret-key-2026"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vulnerable-node-enterprise
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vulnerable-node-enterprise
+  template:
+    metadata:
+      labels:
+        app: vulnerable-node-enterprise
+    spec:
+      # VULNERABILITY 2: Sharing Host Network, Host PID, and Host IPC namespaces
+      hostNetwork: true
+      hostPID: true
+      hostIPC: true
+      containers:
+        - name: app
+          image: node:14
+          command: ["node", "--inspect=0.0.0.0:9229", "/var/app/index.js"]
+          ports:
+            - containerPort: 3000
+            - containerPort: 9229
+          # VULNERABILITY 3: Running as Privileged Root Container with ALL Linux Capabilities
+          securityContext:
+            privileged: true
+            runAsUser: 0
+            allowPrivilegeEscalation: true
+            capabilities:
+              add:
+                - SYS_ADMIN
+                - NET_ADMIN
+                - SYS_PTRACE
+          envFrom:
+            - secretRef:
+                name: enterprise-prod-secrets
+          volumeMounts:
+            # VULNERABILITY 4: Mounting Node Host Root Filesystem (`/`) and Docker Socket inside Pod!
+            - name: host-root-fs
+              mountPath: /host
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+      volumes:
+        - name: host-root-fs
+          hostPath:
+            path: /
+            type: Directory
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket
